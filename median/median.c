@@ -36,9 +36,6 @@ typedef struct mdstatetext
 	int	nelem;		/* number of data */
 } mdstatetext;
 
-/* TEXT comparator utility for quick sort algorithm */
-#define timestamptz_cmp_internal(dt1, dt2)	timestamp_cmp_internal(dt1, dt2);
-
 /* Int comparator utility for quick sort algorithm */
 static int32
 int32_comparator(const void* a, const void* b)
@@ -49,12 +46,21 @@ int32_comparator(const void* a, const void* b)
 }
 
 /* double comparator utility for quick sort algorithm */
-static float8
+static int
 float8_comparator(const void* a, const void* b)
 {
 	float8 af = (*(float8*)a);
 	float8 bf = (*(float8*)b);
-	return (float8)(af > bf) - (af < bf);
+	return (int )(af > bf) - (af < bf);
+}
+
+static int
+timestamp_comparator(const void* a, const void* b)
+{
+	Timestamp dt1 = (*(Timestamp*)a);
+	Timestamp dt2 = (*(Timestamp*)b);
+
+	return (int )(dt1 < dt2) ? -1 : ((dt1 > dt2) ? 1 : 0);
 }
 
 PG_FUNCTION_INFO_V1(median_transfn_int4);
@@ -130,9 +136,9 @@ Datum
 median_finalfn_int4(PG_FUNCTION_ARGS)
 {
 	MemoryContext agg_context;
-	int	idx = 0;
 	mdstate* state;
 	int32* data;
+	int mid;
 
 	if (!AggCheckCallContext(fcinfo, &agg_context))
 		elog(ERROR, "median_finalfn called in non-aggregate context");
@@ -145,7 +151,7 @@ median_finalfn_int4(PG_FUNCTION_ARGS)
 
 	qsort(state->data, state->nelem, sizeof(int32), &int32_comparator);
 
-	int mid = (state->nelem) / 2;
+	mid = (state->nelem) / 2;
 
 	if (state->nelem % 2 == 1) {
 		int32 v1 = data[mid];
@@ -230,7 +236,7 @@ Datum
 median_finalfn_float8(PG_FUNCTION_ARGS)
 {
 	MemoryContext agg_context;
-	int				idx = 0;
+	int mid;
 	mdstate* state;
 	float8* data;
 
@@ -245,7 +251,7 @@ median_finalfn_float8(PG_FUNCTION_ARGS)
 
 	qsort(state->data, state->nelem, sizeof(float8), &float8_comparator);
 
-	int mid = (state->nelem) / 2;
+	mid = (state->nelem) / 2;
 
 	if (state->nelem % 2 == 1) {
 		float8 v1 = data[mid];
@@ -337,7 +343,7 @@ Datum
 median_finalfn_text(PG_FUNCTION_ARGS)
 {
 	MemoryContext agg_context;
-	int				idx = 0;
+	int mid;
 	mdstatetext* state;
 	char** data;
 
@@ -352,7 +358,7 @@ median_finalfn_text(PG_FUNCTION_ARGS)
 
 	qsort(data, state->nelem, sizeof(char *), &pg_qsort_strcmp);
 
-	int mid = (state->nelem) / 2;
+	mid = (state->nelem) / 2;
 
 	if (state->nelem % 2 == 1) {
 		char *v1 = data[mid];
@@ -441,7 +447,7 @@ Datum
 median_finalfn_timestamp(PG_FUNCTION_ARGS)
 {
 	MemoryContext agg_context;
-	int				idx = 0;
+	int mid;
 	mdstate* state;
 	TimestampTz* data;
 
@@ -454,9 +460,9 @@ median_finalfn_timestamp(PG_FUNCTION_ARGS)
 	state = (mdstate*)PG_GETARG_POINTER(0);
 	data = (TimestampTz*)state->data;
 
-	qsort(state->data, state->nelem, sizeof(TimestampTz), &(timestamp_cmp_internal));
+	qsort(state->data, state->nelem, sizeof(TimestampTz), &(timestamp_comparator));
 
-	int mid = (state->nelem) / 2;
+	mid = (state->nelem) / 2;
 
 	if (state->nelem % 2 == 1) {
 		TimestampTz v1 = data[mid];
