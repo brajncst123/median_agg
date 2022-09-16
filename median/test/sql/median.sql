@@ -49,3 +49,22 @@ SELECT TIMESTAMP 'epoch' + (i * INTERVAL '1 second')
 FROM generate_series(0, 100000) as T(i);
 
 SELECT median(val) FROM timestampvals;
+
+CREATE TABLE floatvals(val float8, color text);
+
+-- Test empty table
+SELECT median(val) FROM floatvals;
+
+-- Float with odd number of values
+INSERT INTO floatvals VALUES
+       (1.1, 'a'),
+       (2.2, 'c'),
+       (9.9, 'b'),
+       (7.7, 'c'),
+       (2.5, 'd'),
+       (-3.5, 'd'),
+       (2.7, 'e');
+
+SELECT * FROM floatvals ORDER BY val;
+SELECT median(val) FROM floatvals;
+

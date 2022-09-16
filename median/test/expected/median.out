@@ -95,8 +95,43 @@ INSERT INTO timestampvals(val)
 SELECT TIMESTAMP 'epoch' + (i * INTERVAL '1 second')
 FROM generate_series(0, 100000) as T(i);
 SELECT median(val) FROM timestampvals;
-            median            
-------------------------------
- Thu Jan 01 13:53:20 1970 PST
+         median         
+------------------------
+ 1970-01-01 13:53:20-05
+(1 row)
+
+CREATE TABLE floatvals(val float8, color text);
+-- Test empty table
+SELECT median(val) FROM floatvals;
+ median 
+--------
+       
+(1 row)
+
+-- Float with odd number of values
+INSERT INTO floatvals VALUES
+       (1.1, 'a'),
+       (2.2, 'c'),
+       (9.9, 'b'),
+       (7.7, 'c'),
+       (2.5, 'd'),
+       (-3.5, 'd'),
+       (2.7, 'e');
+SELECT * FROM floatvals ORDER BY val;
+ val  | color 
+------+-------
+ -3.5 | d
+  1.1 | a
+  2.2 | c
+  2.5 | d
+  2.7 | e
+  7.7 | c
+  9.9 | b
+(7 rows)
+
+SELECT median(val) FROM floatvals;
+ median 
+--------
+    2.5
 (1 row)
 
