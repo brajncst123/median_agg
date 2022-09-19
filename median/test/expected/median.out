@@ -95,9 +95,9 @@ INSERT INTO timestampvals(val)
 SELECT TIMESTAMP 'epoch' + (i * INTERVAL '1 second')
 FROM generate_series(0, 100000) as T(i);
 SELECT median(val) FROM timestampvals;
-         median         
-------------------------
- 1970-01-01 13:53:20-05
+         median            
+------------------------------
+ Thu Jan 01 13:53:20 1970 PST
 (1 row)
 
 CREATE TABLE floatvals(val float8, color text);
