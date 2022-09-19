@@ -322,7 +322,7 @@ median_transfn_text(PG_FUNCTION_ARGS)
 
 	/* make sure to cast the array to (int32 *) before updating it */
 	data = state->data;
-	data[state->nelem] = (char*)palloc(sizeof(char) * string_len);
+	data[state->nelem] = (char*)palloc(string_len + 1);
 	strcpy(data[state->nelem],string);
 	state->nelem++;
 
